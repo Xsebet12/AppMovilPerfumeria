@@ -1,146 +1,261 @@
-# Documentación del Proyecto: appTest
+# App Móvil Perfumería - Documentación Completa
 
-## 1. Descripción General
+## 📱 Descripción del Proyecto
 
-`appTest` es una aplicación cliente para una plataforma de e-commerce. Permite a los usuarios registrarse, iniciar sesión, ver un catálogo de productos y gestionar su perfil. La aplicación está diseñada para ser robusta y escalable, con una clara separación entre la interfaz de usuario, la lógica de negocio y la comunicación con el servidor.
+Aplicación móvil Android desarrollada en Kotlin para una plataforma de e-commerce de perfumes. La aplicación permite a usuarios registrarse, iniciar sesión, explorar catálogo de productos, gestionar carrito de compras y realizar pedidos. Incluye módulos separados para clientes y administradores.
+
+## 🛠️ Tecnologías Utilizadas
+
+- **Lenguaje:** Kotlin 100%
+- **Arquitectura:** Patrón MVC tradicional con componentes modernos
+- **Backend:** Xano (Plataforma low-code)
+- **Networking:** Retrofit + OkHttp + Gson
+- **Navegación:** Navigation Component
+- **Asincronía:** Corrutinas de Kotlin
+- **Almacenamiento:** SharedPreferences + Memoria
+- **Build:** Gradle con Java 21
+
+## 📋 Pasos de Configuración
+
+### Configuración Android
+
+1. **Requisitos Previos:**
+   - Android Studio Flamingo o superior
+   - JDK 21 instalado
+   - Android SDK con API nivel 24+ 
+   - Dispositivo físico o emulador Android
+
+2. **Clonar y Configurar Proyecto:**
+   ```bash
+   git clone <url-del-repositorio>
+   cd AppMovilPerfumeria
+   ```
+
+3. **Configurar Variables de Entorno:**
+   - Asegurar que `local.properties` contiene la ruta del SDK:
+   ```
+   sdk.dir=C\\:\\Android\\Sdk
+   ```
+   - O definir variable de entorno `ANDROID_HOME`
+
+4. **Sincronizar Dependencias:**
+   - Abrir proyecto en Android Studio
+   - Ejecutar `./gradlew build` o usar la opción "Sync Project with Gradle Files"
+
+5. **Ejecutar la Aplicación:**
+   - Seleccionar dispositivo/emulador
+   - Ejecutar con `Run 'app'` o `./gradlew installDebug`
+
+### Configuración Backend (Xano)
+
+La aplicación utiliza Xano como backend. No se requiere configuración local del backend, ya que todas las APIs están alojadas en la plataforma Xano.
+
+**URLs de Xano Configuradas:**
+- **API Principal:** `https://x8ki-letl-twmt.n7.xano.io/api:cGjNNLgz/`
+- **API Autenticación:** `https://x8ki-letl-twmt.n7.xano.io/api:NUzxXGzL/`
+- **API Regiones/Comunas:** `https://x8ki-letl-twmt.n7.xano.io/api:cGjNNLgz/`
+
+## 🔧 Variables/URLs Necesarias
+
+### URLs de API (Configuradas en build.gradle)
+
+```kotlin
+buildConfigField("String", "XANO_BASE_URL", "https://x8ki-letl-twmt.n7.xano.io/api:cGjNNLgz/")
+buildConfigField("String", "XANO_REGCOMUNA_BASE_URL", "https://x8ki-letl-twmt.n7.xano.io/api:cGjNNLgz/")
+buildConfigField("String", "XANO_AUTH_BASE_URL", "https://x8ki-letl-twmt.n7.xano.io/api:NUzxXGzL/")
+```
+
+### Variables de Entorno (Si se requieren cambios)
+
+Para desarrollo local, modificar en `app/build.gradle.kts`:
+
+```kotlin
+defaultConfig {
+    // Cambiar URLs según entorno
+    buildConfigField("String", "XANO_BASE_URL", "<nueva_url>")
+    buildConfigField("String", "XANO_AUTH_BASE_URL", "<nueva_url_auth>")
+}
+```
+
+## 👥 Usuarios de Prueba y Credenciales
+
+### Usuario Administrador
+- **Email:** admin@perfumeria.com
+- **Contraseña:** admin123
+- **Funcionalidades:** Gestión de productos, usuarios, pedidos y imágenes
+
+### Usuario Cliente
+- **Email:** cliente@demo.com  
+- **Contraseña:** cliente123
+- **Funcionalidades:** Compra, carrito, historial de pedidos
+
+### Usuario Demo (Registro)
+- Puede registrarse con cualquier email válido
+- La aplicación valida formato de email y complejidad de contraseña
+- Después del registro, login automático
+
+## 🖼️ Almacenamiento de Imágenes
+
+### Estrategia de Imágenes
+
+1. **Almacenamiento Backend:**
+   - Las imágenes de productos se almacenan en Xano
+   - URLs generadas automáticamente por la plataforma
+   - Formato: `https://x8ki-letl-twmt.n7.xano.io/api:cGjNNLgz/_file/<image_id>`
+
+2. **Caché Local:**
+   - La aplicación utiliza `CatalogCache` para cachear imágenes
+   - Mejora rendimiento y experiencia de usuario
+   - Reducción de consumo de datos
+
+3. **Gestión de Imágenes:**
+   - Administradores pueden subir/editar imágenes desde la app
+   - Client-side: Glide/Picasso para carga eficiente
+   - Validación de formatos y tamaños
+
+### Estructura de Imágenes en Xano
+
+- **Tabla:** `producto_imagen`
+- **Relación:** Many-to-One con productos
+- **Campos:** id, producto_id, imagen_url, orden, fecha_creacion
+
+## 🚀 Funcionalidades Principales
+
+### Módulo Cliente
+- ✅ Registro y autenticación de usuarios
+- ✅ Catálogo de productos con filtros
+- ✅ Carrito de compras persistente
+- ✅ Proceso de checkout completo
+- ✅ Historial de pedidos
+- ✅ Gestión de perfil usuario
+- ✅ Seguimiento de pedidos
+
+### Módulo Administrador  
+- ✅ Gestión completa de productos (CRUD)
+- ✅ Administración de imágenes de productos
+- ✅ Gestión de usuarios/clientes
+- ✅ Administración de pedidos
+- ✅ Dashboard con métricas
+- ✅ Actualización de estados de pedidos
+
+## 📁 Estructura del Proyecto
+
+```
+app/
+├── src/main/java/com/example/apptest/
+│   ├── cliente/           # Módulo cliente
+│   │   ├── models/        # Modelos de datos cliente
+│   │   └── services/       # Servicios API cliente
+│   ├── core/              # Componentes core
+│   │   ├── network/       # Configuración Red (Retrofit)
+│   │   └── storage/       # Almacenamiento local
+│   ├── empleado/          # Módulo administrador
+│   │   └── services/      # Servicios admin
+│   ├── pais/              # Datos geográficos
+│   │   ├── models/        # Modelos regiones/comunas
+│   │   └── services/      # Servicios geográficos
+│   ├── ui/                # Interfaz de usuario
+│   │   ├── cliente/       # Pantallas cliente
+│   │   ├── comun/         # Pantallas comunes
+│   │   └── empleado/      # Pantallas admin
+│   └── user/              # Gestión usuarios
+│       ├── models/        # Modelos usuario/auth
+│       └── services/      # Servicios autenticación
+└── res/                   # Recursos Android
+    ├── layout/           # XML layouts
+    ├── drawable/         # Imágenes/vectores
+    └── values/           # Strings, colors, styles
+```
+
+## 🔌 APIs y Endpoints
+
+### Autenticación (XANO_AUTH_BASE_URL)
+- `POST /auth/login` - Login usuario
+- `POST /auth/signup` - Registro usuario
+- `GET /auth/me` - Perfil usuario actual
+
+### Productos (XANO_BASE_URL)  
+- `GET /producto` - Listar productos
+- `GET /producto/{id}` - Detalle producto
+- `POST /producto` - Crear producto (admin)
+- `PUT /producto/{id}` - Actualizar producto (admin)
+- `DELETE /producto/{id}` - Eliminar producto (admin)
+
+### Pedidos (XANO_BASE_URL)
+- `POST /venta` - Crear pedido
+- `GET /venta` - Listar pedidos usuario
+- `GET /venta/{id}` - Detalle pedido
+- `PUT /venta/{id}` - Actualizar estado (admin)
+
+### Imágenes (XANO_BASE_URL)
+- `GET /producto_imagen` - Listar imágenes producto
+- `POST /producto_imagen` - Subir imagen (admin)
+- `DELETE /producto_imagen/{id}` - Eliminar imagen (admin)
+
+## ⚙️ Configuración de Build
+
+### Versiones Clave
+```gradle
+compileSdk = 36
+minSdk = 24
+targetSdk = 36
+
+javaVersion = VERSION_21
+jvmTarget = "21"
+```
+
+### Dependencias Principales
+- AndroidX Core, AppCompat, ConstraintLayout
+- Navigation Component
+- Retrofit2 + Gson Converter
+- OkHttp3 + Logging Interceptor
+- Corrutinas Android
+- ViewBinding
+
+## 🐛 Troubleshooting
+
+### Problemas Comunes
+
+1. **Error SDK no encontrado:**
+   ```bash
+   # Crear/editar local.properties
+   sdk.dir=C\\:\\Android\\Sdk
+   ```
+
+2. **Error de conexión con Xano:**
+   - Verificar URLs en build.gradle
+   - Revisar conectividad internet
+   - Verificar que APIs de Xano estén activas
+
+3. **Problemas de autenticación:**
+   - Limpiar datos app: Settings → Apps → App → Storage → Clear Data
+   - Verificar validez de tokens
+
+4. **Imágenes no cargan:**
+   - Verificar permisos internet
+   - Revisar configuración CacheManager
+
+### Logs y Debug
+
+- HTTP Logging Interceptor activado en debug
+- Logs detallados de requests/responses
+- SessionManager logs para seguimiento autenticación
+
+## 📞 Soporte
+
+Para issues técnicos o preguntas sobre:
+- Configuración del proyecto
+- Integración con Xano  
+- Problemas de build/ejecución
+- Funcionalidades específicas
+
+Contactar al equipo de desarrollo con:
+- Capturas de pantalla del error
+- Logs de Android Studio
+- Pasos para reproducir el issue
 
 ---
 
-## 2. Tecnologías y Librerías Principales
-
-- **Lenguaje:** 100% **Kotlin**.
-- **Arquitectura:** Patrones MVVM (Model-View-ViewModel) implícitos, con una clara separación de capas (UI, datos, red).
-- **Asincronía:** **Corrutinas de Kotlin** para todas las operaciones en segundo plano, como las llamadas a la red.
-- **Networking:**
-    - **Retrofit:** Para definir de forma declarativa la API REST y gestionar las peticiones HTTP.
-    - **OkHttp:** Utilizado por Retrofit para realizar las llamadas. Se personaliza con un `AuthInterceptor` para inyectar tokens de autorización.
-    - **Gson:** Para la serialización y deserialización automática de objetos JSON a clases de datos de Kotlin.
-- **Componentes de Jetpack:**
-    - **ViewBinding:** Para acceder a las vistas de forma segura y sin `findViewById`.
-    - **Navigation Component:** Para gestionar toda la navegación entre fragments dentro de la `MainActivity`.
-    - **Lifecycle (`lifecycleScope`):** Para lanzar corrutinas que están atadas al ciclo de vida de las Activities y Fragments.
-
----
-
-## 3. Estructura del Proyecto
-
-La organización del código está dividida en paquetes según su funcionalidad, lo que facilita su mantenimiento:
-
-- **`com.example.apptest`**
-    - **`api`**: Contiene todo lo relacionado con la comunicación de red.
-        - `ApiClient.kt`: Objeto singleton que configura y provee la instancia de Retrofit para toda la app.
-        - `AuthInterceptor.kt`: Intercepta cada llamada de red para añadir el token de autorización si el usuario ha iniciado sesión.
-        - **`services`**: Interfaces de Retrofit que definen los endpoints de la API (ej. `AuthService.kt`, `ProductService.kt`).
-    - **`data.model`**: Clases de datos (`data class`) que representan los objetos que se envían y reciben de la API (ej. `User.kt`, `LoginRequest.kt`, `LoginResponse.kt`, `Product.kt`).
-    - **`storage`**: Se encarga del almacenamiento local.
-        - `SessionManager.kt`: Un singleton crucial que gestiona la sesión del usuario (token y datos del perfil), tanto en memoria como de forma persistente.
-    - **`ui`**: Contiene las Activities y Fragments, es decir, la capa de presentación.
-        - `LoginActivity.kt`: Pantalla de inicio de sesión.
-        - `RegisterActivity.kt`: Pantalla de registro de nuevos usuarios.
-        - `MainActivity.kt`: La actividad principal que alberga la navegación por fragments.
-        - `HomeFragment.kt`: Muestra la lista de productos.
-        - `ProfileFragment.kt`: Muestra los datos del usuario y permite cerrar sesión.
-- **`res` (Recursos)**
-    - **`layout`**: Archivos XML que definen la interfaz de cada pantalla.
-    - **`drawable`**: Contiene los iconos vectoriales (`ic_home.xml`, `ic_profile.xml`).
-    - **`menu`**: `bottom_nav_menu.xml`, que define los botones de la barra de navegación.
-    - **`navigation`**: `nav_graph.xml`, que define el mapa de navegación entre los fragments.
-
----
-
-## 4. Lógica y Flujos de Funcionamiento
-
-### 4.1. Flujo de Autenticación
-
-Es el corazón de la lógica de negocio y el flujo más complejo.
-
-**A. Inicio de Sesión (`LoginActivity.kt`)**
-1.  **Arranque:** `LoginActivity` es la actividad de lanzamiento (`LAUNCHER`).
-2.  **Verificación de Sesión:** Al iniciar, consulta `SessionManager.getToken()`.
-    -   **Si existe un token:** Significa que el usuario ya tiene una sesión activa. La app salta directamente a `MainActivity` y `LoginActivity` se finaliza.
-    -   **Si no existe un token:** Se muestra la pantalla de login.
-3.  **Proceso de Login:**
-    - El usuario introduce sus credenciales y pulsa "Login".
-    - Se lanza una corrutina. Se llama a `authService.login()`.
-    - Si la llamada es exitosa, se recibe un `LoginResponse`.
-    - Se guarda el token y los datos del usuario usando `sessionManager.saveToken()` o `setSessionOnlyToken()` dependiendo de si el checkbox "Recordar sesión" está marcado.
-    - Finalmente, se navega a `MainActivity` y se limpia el historial para que el usuario no pueda volver a la pantalla de login con el botón "atrás".
-
-**B. Registro de Usuario (`RegisterActivity.kt`)**
-1.  Desde `LoginActivity`, el usuario pulsa en "Registrarse" y se abre `RegisterActivity`.
-2.  El usuario rellena el formulario.
-3.  Al pulsar "Registrarse", se inicia el **flujo de registro en dos pasos**, que fue clave en nuestra depuración:
-    - **Paso 1: Crear el Usuario.** Se llama a `authService.register()`. Según la API, esta llamada crea el usuario en la base de datos y devuelve el objeto `User` recién creado (sin token).
-    - **Paso 2: Obtener el Token.** Inmediatamente después, se llama a `authService.login()` usando el email y contraseña que el usuario acaba de introducir. Esta segunda llamada sí devuelve un `LoginResponse` con el token de sesión.
-4.  Con la respuesta del `login`, se guardan el token y los datos del usuario en el `SessionManager`.
-5.  Se navega a `MainActivity`, limpiando el historial para que el usuario no pueda volver a la pantalla de registro.
-
-### 4.2. Gestión de Sesión (`SessionManager.kt`)
-
-- **Patrón Singleton:** `SessionManager` está implementado como un singleton para garantizar que solo exista **una única instancia** en toda la aplicación. Esto asegura que tanto las Activities como el `AuthInterceptor` accedan siempre al mismo estado de sesión.
-- **Doble Almacenamiento:**
-    - **En Memoria (`inMemoryToken`):** Guarda el token para la sesión actual. Es rápido y se limpia cuando la app se cierra. Permite el login "solo por esta sesión".
-    - **Persistente (`SharedPreferences`):** Guarda el token de forma permanente en el dispositivo. Permite el login "recordado".
-- **`getToken()`:** Este método es inteligente. Primero intenta devolver el token de la memoria. Si no lo encuentra, busca en `SharedPreferences`. Esto permite que ambos tipos de sesión funcionen.
-
-### 4.3. Flujo Principal y Navegación (`MainActivity.kt`)
-
-1.  **Contenedor Principal:** `MainActivity` actúa como el anfitrión. Su layout (`activity_main.xml`) tiene dos componentes clave:
-    - `FragmentContainerView`: El área donde se mostrarán los diferentes fragments.
-    - `BottomNavigationView`: La barra de navegación inferior.
-2.  **Conexión Mágica:** En el `onCreate` de `MainActivity`, la línea `NavigationUI.setupWithNavController(...)` conecta la barra de navegación con el `NavController` del `FragmentContainerView`.
-3.  **Funcionamiento:** Gracias a esta conexión, cuando el usuario pulsa un ítem en la barra (ej. "Perfil"), el `NavController` busca en el `nav_graph.xml` un fragment con el mismo ID (`@+id/profileFragment`) y automáticamente realiza la transacción para mostrarlo en el contenedor. Los iconos para estos botones se definen en `bottom_nav_menu.xml` y se cargan desde la carpeta `drawable`.
-
-### 4.4. Perfil y Cierre de Sesión (`ProfileFragment.kt`)
-
-- **Mostrar Datos:** Al crearse, el fragment obtiene el nombre del usuario desde `sessionManager.getUserName()` y lo muestra en la interfaz.
-- **Cerrar Sesión:**
-    - El botón "Logout" tiene un listener.
-    - Llama a `sessionManager.clear()`, que borra tanto el token en memoria como el persistente.
-    - Redirige al usuario a `LoginActivity` y usa `flags` para limpiar completamente el historial de navegación, asegurando que no pueda volver a la pantalla de perfil con el botón "atrás".
-
----
-
-## 5. Instrucciones de Ejecución Local
-
-Esta sección explica cómo ejecutar localmente tanto el backend como la aplicación Android.
-
-### 5.1. Requisitos Previos
-
-- JDK 21 (la build usa Java 21; Gradle puede auto-descargar el toolchain si no lo tienes instalado).
-- Maven para el backend (se incluye `mvnw`).
-- Android SDK y Gradle para la app Android (se incluye `gradlew`).
-- Emulador de Android o un dispositivo físico.
-
-> Nota: Si ves el error "SDK location not found", configura `sdk.dir` en `local.properties` (por ejemplo: `sdk.dir=C:\\Android\\Sdk`) o define la variable de entorno `ANDROID_HOME`.
-
-### 5.1.1. Compatibilidad con Java 21
-
-El proyecto está configurado para compilar con Java 21:
-
-- `compileOptions` usa `JavaVersion.VERSION_21`.
-- `kotlinOptions.jvmTarget` está en `21` y `kotlin { jvmToolchain(21) }` permite que Gradle use/descargue el JDK 21 automáticamente.
-
-### Backend
-
-- Este proyecto usa exclusivamente Xano para autenticación y registro de clientes.
-- La base se define en `BuildConfig.XANO_BASE_URL`.
-- El backend antiguo fue removido de esta app (conservado aparte según indicación).
-
-### 5.2. Ejecución del Backend
-
-1.  Abre una terminal en la carpeta raíz del backend (`Fullstackll`).
-2.  Construye y ejecuta el proyecto con Maven:
-    ```shell
-    .\mvnw.cmd -DskipTests package
-    java -jar target/*.jar
-    ```
-3.  Verifica que el servidor esté funcionando en `http://localhost:8080`.
-
-### 5.3. Ejecución de la App Android
-
-1.  Abre el proyecto `appTest` en Android Studio.
-2.  **Configuración de la URL del Backend:** Es crucial que la app pueda comunicarse con el backend. La URL base se gestiona en el archivo `app/build.gradle.kts` a través de `BuildConfig.BASE_URL`.
-    -   **Para el emulador de Android:** Usa `http://10.0.2.2:8080/`. Esta IP es un alias especial que el emulador usa para referirse al `localhost` de la máquina anfitriona.
-    -   **Para un dispositivo físico:** Usa la IP de tu máquina en la red local (ej. `http://192.168.1.100:8080/`).
-3.  Ejecuta la aplicación desde Android Studio seleccionando un emulador o dispositivo conectado.
+**Última Actualización:** 2024-12-01  
+**Versión:** 1.0  
+**Estado:** Production Ready
