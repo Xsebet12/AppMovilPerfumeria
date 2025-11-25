@@ -115,7 +115,7 @@ class ManageUsersFragment: Fragment() {
                 }
                 // Región seleccionada actual
                 val regionIdSel = spRegion.selectedItemPosition.takeIf { it in st.regiones.indices }?.let { st.regiones[it].first }
-                comunasFiltradasPairs = st.comunasDetalladas.filter { it.second == regionIdSel }.map { it.first to it.third }
+                comunasFiltradasPairs = st.comunasDetalladas.filter { it.second != null && it.second == regionIdSel }.map { it.first to it.third }
                 val comunasNombres = comunasFiltradasPairs.map { it.second }
                 spComuna.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, comunasNombres)
             }
@@ -125,7 +125,7 @@ class ManageUsersFragment: Fragment() {
             override fun onItemSelected(parent: android.widget.AdapterView<*>, view: View?, position: Int, id: Long) {
                 val st = viewModel.state.value
                 val regionIdSel = st.regiones.getOrNull(position)?.first
-                comunasFiltradasPairs = st.comunasDetalladas.filter { it.second == regionIdSel }.map { it.first to it.third }
+                comunasFiltradasPairs = st.comunasDetalladas.filter { it.second != null && it.second == regionIdSel }.map { it.first to it.third }
                 val nombres = comunasFiltradasPairs.map { it.second }
                 spComuna.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, nombres)
             }

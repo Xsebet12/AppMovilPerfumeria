@@ -13,5 +13,8 @@ interface XanoAuthService {
     suspend fun registrar(@Body cuerpo: Map<String, @JvmSuppressWildcards Any>): JsonObject
 
     @GET("auth/MeCliente")
-    suspend fun me(): JsonObject
+    suspend fun meCliente(): JsonObject
+
+    @GET("auth/MeEmp")
+    suspend fun meEmpleado(): JsonObject
 }

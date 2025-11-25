@@ -103,6 +103,25 @@
             android:textSize="12sp"
             android:paddingTop="2dp"/>
 
+        <TextView
+            android:id="@+id/tvCantidadLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Cantidad"
+            android:textColor="@color/dorado_secundario"
+            android:paddingTop="12dp"/>
+
+        <EditText
+            android:id="@+id/etCantidad"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:hint="1"
+            android:ems="4"
+            android:textColor="@color/black"
+            android:textColorHint="@color/dorado_oscuro"
+            android:backgroundTint="@color/dorado_secundario"/>
+
         <ProgressBar
             android:id="@+id/progresoDetalle"
             style="@android:style/Widget.ProgressBar.Small"

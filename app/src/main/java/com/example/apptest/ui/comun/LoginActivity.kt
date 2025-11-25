@@ -43,6 +43,9 @@ class LoginActivity : ComponentActivity() {
 
             lifecycleScope.launch {
                 try {
+                    binding.pbLogin.visibility = android.view.View.VISIBLE
+                    binding.btnLogin.isEnabled = false
+                    kotlinx.coroutines.delay(4000)
                     // Autenticación con timeout total de 5s
                     val respuestaJson = kotlinx.coroutines.withTimeoutOrNull(5000) {
                         repositorioXano.login(correo, contrasena)
@@ -67,14 +70,10 @@ class LoginActivity : ComponentActivity() {
                     // Guardar minimal user (id + tipo) para navegación inmediata antes de perfil completo
                     gestorSesion.saveMinimalUser(userIdLogin, userTypeLogin)
 
-                    // Obtener perfil del usuario
                     try {
-                        val perfilJson = kotlinx.coroutines.withTimeoutOrNull(5000) { repositorioXano.obtenerPerfilJson() }
-                        perfilJson?.let {
-                            val usuario = repositorioXano.mapearUserDesdeJson(it)
-                            gestorSesion.saveUser(usuario)
-                        }
-                    } catch (_: Exception) { /* ignorar para no bloquear login */ }
+                        val usuario = kotlinx.coroutines.withTimeoutOrNull(5000) { repositorioXano.obtenerPerfil() }
+                        usuario?.let { gestorSesion.saveUser(it) }
+                    } catch (_: Exception) { }
 
                     val usuario = gestorSesion.getUser()
                     val nombreAMostrar = gestorSesion.getUserName() ?: ""
@@ -85,6 +84,9 @@ class LoginActivity : ComponentActivity() {
                     finish()
                 } catch (e: Exception) {
                     Toast.makeText(this@LoginActivity, "Error de inicio de sesión: ${e.message}", Toast.LENGTH_SHORT).show()
+                } finally {
+                    binding.pbLogin.visibility = android.view.View.GONE
+                    binding.btnLogin.isEnabled = true
                 }
             }
         }

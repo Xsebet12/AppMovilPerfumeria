@@ -23,6 +23,13 @@
             android:textColor="@color/dorado_secundario"
             tools:text="Sebastián Cornejo" />
 
+        <ProgressBar
+            android:id="@+id/pbPerfil"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:visibility="gone"/>
+
         <View
             android:layout_width="64dp"
             android:layout_height="3dp"

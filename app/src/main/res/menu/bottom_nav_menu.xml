@@ -32,6 +32,12 @@
         android:icon="@drawable/ic_profile"
         android:title="Usuarios" />
 
+    <!-- Gestión de Empleados (solo owner rol_id=2) -->
+    <item
+        android:id="@+id/manageEmployeesFragment"
+        android:icon="@drawable/ic_profile"
+        android:title="Empleados" />
+
     <!-- Órdenes (visible para empleados) -->
     <item
         android:id="@+id/manageOrdersFragment"

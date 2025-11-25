@@ -103,16 +103,18 @@ class EditProfileActivity : AppCompatActivity() {
                 binding.spRegion.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                     override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                         val rid = listaRegiones.getOrNull(position)?.first ?: return
-                        listaComunas = comunasTodas.filter { it.third == rid }
+                        listaComunas = comunasTodas.filter { it.third != null && it.third == rid }
                         val adaptadorComuna = ArrayAdapter(this@EditProfileActivity, android.R.layout.simple_spinner_item, listaComunas.map { it.second }).apply {
                             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                         }
                         binding.spComuna.adapter = adaptadorComuna
-                        binding.spComuna.isEnabled = true
+                        binding.spComuna.isEnabled = listaComunas.isNotEmpty()
                         val comunaActualId = session.getUser()?.comuna_id
                         if (comunaActualId != null) {
                             val idx = listaComunas.indexOfFirst { it.first == comunaActualId }
                             if (idx >= 0) binding.spComuna.setSelection(idx)
+                        } else if (listaComunas.isNotEmpty()) {
+                            binding.spComuna.setSelection(0)
                         }
                     }
                     override fun onNothingSelected(parent: AdapterView<*>) { binding.spComuna.isEnabled = false }
@@ -183,8 +185,7 @@ class EditProfileActivity : AppCompatActivity() {
                     )
                     withContext(Dispatchers.IO) { repo.editarCliente(campos) }
                     // Refrescar perfil
-                    val perfilJson = withContext(Dispatchers.IO) { repo.obtenerPerfilJson() }
-                    val usuarioActualizado = repo.mapearUserDesdeJson(perfilJson)
+                    val usuarioActualizado = withContext(Dispatchers.IO) { repo.obtenerPerfil() }
                     session.saveUser(usuarioActualizado)
                     binding.tvEstado.text = "Cambios guardados"
                     Toast.makeText(this@EditProfileActivity, "Perfil actualizado", Toast.LENGTH_SHORT).show()

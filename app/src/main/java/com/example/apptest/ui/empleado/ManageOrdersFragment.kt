@@ -64,6 +64,7 @@ class ManageOrdersFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 binding.progressOrdenes.visibility = View.VISIBLE
+                kotlinx.coroutines.delay(2000)
                 val servicio = ApiClient.getRetrofit(requireContext()).create(XanoVentaService::class.java)
                 val estado = when (idx) {
                     1 -> "aceptado"
@@ -95,56 +96,64 @@ class ManageOrdersFragment : Fragment() {
     private fun aceptarPago(id: Long) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                kotlinx.coroutines.delay(5000)
+                binding.progressOrdenes.visibility = View.VISIBLE
+                kotlinx.coroutines.delay(2000)
                 val servicio = ApiClient.getRetrofit(requireContext()).create(XanoVentaService::class.java)
                 val res = servicio.aceptar(id, mapOf("venta_id" to id))
                 Toast.makeText(requireContext(), "Pago aceptado #${res.id}", Toast.LENGTH_SHORT).show()
                 cargarPorEstado(binding.spFiltroEstado.selectedItemPosition)
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Error aceptar: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+                adapter.resetLoadingStates()
+            } finally { binding.progressOrdenes.visibility = View.GONE }
         }
     }
 
     private fun rechazarPago(id: Long) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                kotlinx.coroutines.delay(5000)
+                binding.progressOrdenes.visibility = View.VISIBLE
+                kotlinx.coroutines.delay(2000)
                 val servicio = ApiClient.getRetrofit(requireContext()).create(XanoVentaService::class.java)
                 val res = servicio.rechazar(id, mapOf("id" to id))
                 Toast.makeText(requireContext(), "Pago rechazado #${res.id}", Toast.LENGTH_SHORT).show()
                 cargarPorEstado(binding.spFiltroEstado.selectedItemPosition)
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Error rechazar: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+                adapter.resetLoadingStates()
+            } finally { binding.progressOrdenes.visibility = View.GONE }
         }
     }
 
     private fun marcarEnviado(id: Long) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                kotlinx.coroutines.delay(5000)
+                binding.progressOrdenes.visibility = View.VISIBLE
+                kotlinx.coroutines.delay(2000)
                 val servicio = ApiClient.getRetrofit(requireContext()).create(XanoVentaService::class.java)
                 val res = servicio.marcarDespachado(id)
                 Toast.makeText(requireContext(), "Despachado #${res.venta_id}", Toast.LENGTH_SHORT).show()
                 cargarPorEstado(binding.spFiltroEstado.selectedItemPosition)
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Error enviar: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+                adapter.resetLoadingStates()
+            } finally { binding.progressOrdenes.visibility = View.GONE }
         }
     }
 
     private fun marcarEntregado(id: Long) {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                kotlinx.coroutines.delay(5000)
+                binding.progressOrdenes.visibility = View.VISIBLE
+                kotlinx.coroutines.delay(2000)
                 val servicio = ApiClient.getRetrofit(requireContext()).create(XanoVentaService::class.java)
                 val res = servicio.marcarEntregado(id)
                 Toast.makeText(requireContext(), "Entregado #${res.venta_id}", Toast.LENGTH_SHORT).show()
                 cargarPorEstado(binding.spFiltroEstado.selectedItemPosition)
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Error entregado: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+                adapter.resetLoadingStates()
+            } finally { binding.progressOrdenes.visibility = View.GONE }
         }
     }
 

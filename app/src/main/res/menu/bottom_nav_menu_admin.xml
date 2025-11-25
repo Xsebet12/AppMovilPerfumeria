@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/homeAdminFragment" android:icon="@drawable/ic_home" android:title="Home" />
+    <item android:id="@+id/profileFragment" android:icon="@drawable/ic_profile" android:title="Perfil" />
+    <item android:id="@+id/manageUsersFragment" android:icon="@drawable/ic_profile" android:title="Usuarios" />
+    <item android:id="@+id/manageOrdersFragment" android:icon="@drawable/ic_home" android:title="Órdenes" />
+    <item android:id="@+id/manageEmployeesFragment" android:icon="@drawable/ic_profile" android:title="Empleados" />
+</menu>
+

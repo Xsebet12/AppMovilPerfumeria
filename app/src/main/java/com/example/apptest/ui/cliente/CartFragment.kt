@@ -91,6 +91,7 @@ class CartFragment : Fragment() {
                 val servicio = ApiClient.getRetrofit(requireContext()).create(XanoVentaService::class.java)
                 val productosSrv = ApiClient.getRetrofit(requireContext()).create(com.example.apptest.user.services.XanoProducInvService::class.java)
                 val reconciliados = mutableListOf<com.example.apptest.core.storage.ItemCarrito>()
+                val insuficientes = mutableListOf<Pair<com.example.apptest.core.storage.ItemCarrito, Int>>()
                 for (it in items) {
                     val pid = it.producto_id
                     var actualizado: com.example.apptest.user.services.XanoProducInvItem? = null
@@ -103,10 +104,39 @@ class CartFragment : Fragment() {
                     var elegido = invFinal?.let { id -> it.copy(inventario_id = id) } ?: it
                     val stock = actualizado?.stock ?: it.stock_disponible
                     if (stock != null) {
+                        if (elegido.cantidad > stock) {
+                            insuficientes.add(elegido to stock)
+                        }
                         val limitada = kotlin.math.max(0, kotlin.math.min(elegido.cantidad, stock))
                         elegido = elegido.copy(cantidad = limitada, stock_disponible = stock)
                     }
                     reconciliados.add(elegido)
+                }
+                if (insuficientes.isNotEmpty()) {
+                    val usuarioId = usuario.id
+                    val listaMsg = insuficientes.joinToString(separator = "\n") { (it, st) ->
+                        val nombre = it.nombre_producto ?: "Producto"
+                        "- ${nombre}: pedido ${it.cantidad}, stock ${st}"
+                    }
+                    val dialogMsg = "Algunos productos superan el stock disponible. Se ajustó la cantidad al máximo permitido:\n\n${listaMsg}"
+                    // Ajustar cantidades al stock actual (o eliminar si stock 0)
+                    insuficientes.forEach { (it, st) ->
+                        if (st <= 0) {
+                            cart.eliminarItem(usuarioId, it.inventario_id)
+                        } else {
+                            cart.actualizarCantidad(usuarioId, it.inventario_id, st)
+                        }
+                    }
+                    refrescarDesdeStorage()
+                    androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                        .setTitle("Stock insuficiente")
+                        .setMessage(dialogMsg)
+                        .setPositiveButton("Aceptar", null)
+                        .show()
+                    binding.pbPago.visibility = View.GONE
+                    binding.btnPagar.isEnabled = true
+                    binding.btnHistorial.isEnabled = true
+                    return@launch
                 }
                 if (reconciliados.isEmpty()) { Toast.makeText(requireContext(), "Carrito sin inventarios válidos", Toast.LENGTH_SHORT).show(); cart.limpiar(usuario.id); refrescarDesdeStorage(); return@launch }
                 val tipo = when (session.getUser()?.tipo_cliente?.trim()?.lowercase()) {

@@ -66,7 +66,7 @@
             android:id="@+id/tvTotal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="$0"
+            android:text="0"
             android:textStyle="bold"
             android:textColor="@color/dorado_secundario"/>
     </LinearLayout>
@@ -79,64 +79,70 @@
         android:textColor="@color/black"
         android:layout_marginTop="2dp"/>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="end"
-        android:layout_marginTop="8dp">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:orientation="horizontal">
 
         <ProgressBar
             android:id="@+id/pbAccion"
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_marginRight="8dp"
-            android:visibility="gone"/>
+            android:visibility="gone" />
 
-        <Button
-            android:id="@+id/btnVerResumen"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/ver_resumen"
-            android:layout_marginRight="8dp"
-            android:backgroundTint="@color/dorado_secundario"
-            android:tint="@color/white"/>
+            android:orientation="vertical"
+            android:layout_marginRight="8dp">
+            <Button
+                android:id="@+id/btnVerResumen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/dorado_secundario"
+                android:text="@string/ver_resumen"
+                android:tint="@color/white" />
+            <Button
+                android:id="@+id/btnRechazar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:backgroundTint="@color/dorado_secundario"
+                android:text="@string/rechazar_pago"
+                android:tint="@color/white" />
+        </LinearLayout>
 
         <Button
             android:id="@+id/btnAceptar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/aceptar_pago"
             android:layout_marginRight="8dp"
             android:backgroundTint="@color/dorado_secundario"
-            android:tint="@color/white"/>
-        />
+            android:text="@string/aceptar_pago"
+            android:tint="@color/white" />
 
         <Button
             android:id="@+id/btnMarcarEnviado"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginRight="8dp"
-            android:text="@string/marcar_enviado"
             android:backgroundTint="@color/dorado_secundario"
-            android:tint="@color/white"/>
+            android:text="@string/marcar_enviado"
+            android:tint="@color/white" />
 
         <Button
             android:id="@+id/btnMarcarEntregado"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginRight="8dp"
-            android:text="@string/marcar_entregado"
             android:backgroundTint="@color/dorado_secundario"
-            android:tint="@color/white"/>
+            android:text="@string/marcar_entregado"
+            android:tint="@color/white" />
 
-        <Button
-            android:id="@+id/btnRechazar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/rechazar_pago"/>
-    </LinearLayout>
 
+        </LinearLayout>
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"

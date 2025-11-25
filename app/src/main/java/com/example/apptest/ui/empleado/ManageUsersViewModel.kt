@@ -51,6 +51,7 @@ class ManageUsersViewModel(private val context: Context): ViewModel() {
     fun cargarClientes() {
         viewModelScope.launch {
             _state.update { it.copy(cargando = true, error = null) }
+            kotlinx.coroutines.delay(4000)
             repo.listar().onSuccess { lista ->
                 _state.update { it.copy(clientes = lista, cargando = false) }
             }.onFailure { e ->
@@ -98,6 +99,7 @@ class ManageUsersViewModel(private val context: Context): ViewModel() {
     fun cargarRegionesYComunas() {
         viewModelScope.launch {
             try {
+                kotlinx.coroutines.delay(4000)
                 val regionesCompletas = regComunaSrv.obtenerRegionesConComunas()
                 val regiones = regionesCompletas.mapNotNull { it.regionPair() }
                 val comunasDetalladas = regionesCompletas.flatMap { reg ->

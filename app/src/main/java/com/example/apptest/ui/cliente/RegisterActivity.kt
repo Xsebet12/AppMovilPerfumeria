@@ -136,13 +136,11 @@ class RegisterActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Deshabilito el botón y muestro el indicador de carga.
             enlace.btnRegister.isEnabled = false
             enlace.pbCargando.visibility = View.VISIBLE
             enlace.tvEstadoRegistro.text = "Registrando..."
             enlace.tvEstadoRegistro.visibility = View.VISIBLE
 
-            // Lanzo una corrutina para las operaciones de red.
             lifecycleScope.launch {
                 try {
                     run {
@@ -174,10 +172,9 @@ class RegisterActivity : AppCompatActivity() {
                         gestorSesion.saveToken(token)
                         // Obtenemos perfil actual y lo guardamos
                         try {
-                            val perfilJson = withContext(Dispatchers.IO) { repositorioXano.obtenerPerfilJson() }
-                            val usuario = repositorioXano.mapearUserDesdeJson(perfilJson)
+                            val usuario = withContext(Dispatchers.IO) { repositorioXano.obtenerPerfil() }
                             gestorSesion.saveUser(usuario)
-                        } catch (_: Exception) { /* opcional: mostrar log/Toast */ }
+                        } catch (_: Exception) { }
                     }
 
                     // Muestro un mensaje de bienvenida.
@@ -220,21 +217,27 @@ class RegisterActivity : AppCompatActivity() {
                 }
                 enlace.spRegion.adapter = adaptadorRegion
 
-                // Preconstruir comunas agrupadas por región
-                val comunasTodas = regionesCompletas.flatMap { region ->
-                    region.comunas.orEmpty().map { c -> Triple(c.id, c.nombreComuna ?: c.id.toString(), c.regionId) }
+                // Preconstruir comunas agrupadas por región usando la relación directa del objeto región
+                val comunasPorRegion: Map<Int, List<Triple<Int, String, Int?>>> = regionesCompletas.associate { region ->
+                    val lista = region.comunas.orEmpty().map { c ->
+                        Triple(c.id, c.nombreComuna ?: c.id.toString(), c.regionId)
+                    }
+                    region.id to lista
                 }
 
                 enlace.spRegion.setOnItemSelectedListener(object : android.widget.AdapterView.OnItemSelectedListener {
                     override fun onItemSelected(parent: android.widget.AdapterView<*>, view: android.view.View?, position: Int, id: Long) {
                         val rid = listaRegiones.getOrNull(position)?.first ?: return
-                        listaComunas = comunasTodas.filter { it.third == rid }
+                        listaComunas = comunasPorRegion[rid].orEmpty()
                         val nombresComuna = listaComunas.map { it.second }
                         val adaptadorComuna = android.widget.ArrayAdapter(this@RegisterActivity, android.R.layout.simple_spinner_item, nombresComuna).apply {
                             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                         }
                         enlace.spComuna.adapter = adaptadorComuna
-                        enlace.spComuna.isEnabled = true
+                        enlace.spComuna.isEnabled = listaComunas.isNotEmpty()
+                        if (listaComunas.isNotEmpty()) {
+                            enlace.spComuna.setSelection(0)
+                        }
                     }
                     override fun onNothingSelected(parent: android.widget.AdapterView<*>) {
                         enlace.spComuna.isEnabled = false

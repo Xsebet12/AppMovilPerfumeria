@@ -45,9 +45,10 @@ class OrderSummaryActivity : ComponentActivity() {
 
         scope.launch {
             try {
+                binding.pbOrderSummary.visibility = android.view.View.VISIBLE
+                kotlinx.coroutines.delay(4000)
                 val servicio = ApiClient.getRetrofit(this@OrderSummaryActivity).create(XanoVentaService::class.java)
                 val respuesta = servicio.obtenerDetalleVenta(ventaId)
-                kotlinx.coroutines.delay(5000)
                 // Encabezado
                 binding.tvVentaId.text = "Venta #${respuesta.venta_info.id}"
                 binding.tvMetodoPago.text = respuesta.venta_info.metodo_pago ?: "-"
@@ -76,7 +77,7 @@ class OrderSummaryActivity : ComponentActivity() {
                 }
             } catch (_: Exception) {
                 finish()
-            }
+            } finally { binding.pbOrderSummary.visibility = android.view.View.GONE }
         }
 
         binding.btnActualizarSeguimiento.setOnClickListener {

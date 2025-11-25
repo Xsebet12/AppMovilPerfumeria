@@ -60,4 +60,18 @@
         android:name="com.example.apptest.ui.empleado.ManageOrdersFragment"
         android:label="Órdenes" />
 
+    <fragment
+        android:id="@+id/manageEmployeesFragment"
+        android:name="com.example.apptest.ui.empleado.ManageEmployeesFragment"
+        android:label="Empleados" />
+
+    <fragment
+        android:id="@+id/empleadoDetailFragment"
+        android:name="com.example.apptest.ui.empleado.EmpleadoDetailFragment"
+        android:label="Detalle Empleado">
+        <argument
+            android:name="empleado_id"
+            app:argType="integer" />
+    </fragment>
+
 </navigation>

@@ -136,6 +136,8 @@ class HomeAdminFragment : Fragment() {
         tipoClienteActual = SessionManager.getInstance(requireContext()).getUser()?.tipo_cliente?.lowercase()
         viewLifecycleOwner.lifecycleScope.launch {
             try {
+                binding.pbHomeAdmin?.visibility = android.view.View.VISIBLE
+                kotlinx.coroutines.delay(2000)
                 val catalogo = kotlinx.coroutines.withTimeoutOrNull(15000) { servicioCatalogo.obtener() }
                 val listaCatalogo = catalogo?.productos ?: emptyList()
                 if (catalogo != null) CatalogCache.set(catalogo.categorias, catalogo.marcas)
@@ -151,7 +153,7 @@ class HomeAdminFragment : Fragment() {
                 } else {
                     android.widget.Toast.makeText(requireContext(), "Error cargando productos: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
                 }
-            } finally { cargando = false }
+            } finally { cargando = false; binding.pbHomeAdmin?.visibility = android.view.View.GONE }
         }
 
         binding.recyclerView.addOnScrollListener(object: androidx.recyclerview.widget.RecyclerView.OnScrollListener() {

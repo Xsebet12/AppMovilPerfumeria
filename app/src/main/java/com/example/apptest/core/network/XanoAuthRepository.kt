@@ -17,6 +17,7 @@ import java.util.Locale
 class XanoAuthRepository(private val context: Context) {
     // Usamos ApiClient para asegurar que el AuthInterceptor adjunta el token Bearer en auth/me
     private val servicio by lazy { ApiClient.getRetrofitAuth(context).create(com.example.apptest.user.services.XanoAuthService::class.java) }
+    private val sessionManager by lazy { com.example.apptest.core.storage.SessionManager.getInstance(context) }
     // Servicio de edición de cliente autenticado
     private val servicioEditar by lazy { ApiClient.getRetrofit(context).create(com.example.apptest.cliente.services.XanoClienteEditarService::class.java) }
 
@@ -32,10 +33,24 @@ class XanoAuthRepository(private val context: Context) {
         return servicio.registrar(datos.toBody())
     }
 
-    /**
-     * Obtiene el perfil del usuario autenticado desde Xano (usa el Bearer del interceptor).
-     */
-    suspend fun obtenerPerfilJson(): JsonObject = servicio.me()
+    suspend fun obtenerPerfil(): User {
+        val tipo = sessionManager.getUser()?.user_type?.lowercase()
+        return when (tipo) {
+            "empleado" -> {
+                val json = servicio.meEmpleado()
+                mapearEmpleadoDesdeJson(json)
+            }
+            else -> {
+                try {
+                    val json = servicio.meCliente()
+                    mapearUserDesdeJson(json)
+                } catch (_: Exception) {
+                    val jsonAlt = servicio.meEmpleado()
+                    mapearEmpleadoDesdeJson(jsonAlt)
+                }
+            }
+        }
+    }
 
     fun mapearUserDesdeJson(json: JsonObject): User {
         // Extraemos los campos directamente de la nueva API /auth/MeCliente

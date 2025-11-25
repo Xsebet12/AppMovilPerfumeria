@@ -45,8 +45,9 @@ class ProfileFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val perfilJson = repo.obtenerPerfilJson()
-                val usuario = repo.mapearUserDesdeJson(perfilJson)
+                _binding?.pbPerfil?.visibility = android.view.View.VISIBLE
+                kotlinx.coroutines.delay(2000)
+                val usuario = repo.obtenerPerfil()
                 sessionManager.saveUser(usuario)
                 renderUser()
             } catch (e: Exception) {
@@ -62,6 +63,7 @@ class ProfileFragment : Fragment() {
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                 renderUser()
             }
+            finally { _binding?.pbPerfil?.visibility = android.view.View.GONE }
         }
 
         // Configuro el listener del botón de logout.

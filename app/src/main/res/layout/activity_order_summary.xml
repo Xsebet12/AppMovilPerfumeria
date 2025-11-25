@@ -40,6 +40,13 @@
         android:text="Estado"
         android:textColor="@color/black"/>
 
+    <ProgressBar
+        android:id="@+id/pbOrderSummary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:visibility="gone"/>
+
     <LinearLayout
         android:id="@+id/contenedorSeguimiento"
         android:layout_width="match_parent"

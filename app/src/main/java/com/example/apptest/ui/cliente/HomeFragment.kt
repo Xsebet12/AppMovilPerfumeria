@@ -149,6 +149,8 @@ class HomeFragment : Fragment() {
         tipoClienteActual = sesion.getUser()?.tipo_cliente?.lowercase()
         lifecycleScope.launch {
             try {
+                _binding?.pbHome?.visibility = android.view.View.VISIBLE
+                kotlinx.coroutines.delay(2000)
                 val listaFull = kotlinx.coroutines.withTimeoutOrNull(12000) {
                     servicioCombinado.listar()
                 } ?: emptyList()
@@ -169,6 +171,7 @@ class HomeFragment : Fragment() {
                 }
             } finally {
                 cargando = false
+                _binding?.pbHome?.visibility = android.view.View.GONE
             }
         }
     }

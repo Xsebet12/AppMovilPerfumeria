@@ -48,8 +48,8 @@ class ProductDetailActivity : ComponentActivity() {
             } catch (e: Exception) {
                 mostrarError(e)
             } finally {
-                binding.progresoDetalle.visibility = android.view.View.GONE
-            }
+        binding.progresoDetalle.visibility = android.view.View.GONE
+        }
         }
 
         cartManager = CartManager.getInstance(this)
@@ -87,6 +87,23 @@ class ProductDetailActivity : ComponentActivity() {
         }
         binding.tvPrecioValor.text = precio?.let { formatearCLP(it) } ?: "--"
         binding.tvPrecioReferencia.text = item.costo_referencia?.let { "Costo referencia: ${formatearCLP(it)}" } ?: ""
+
+        val stockMax = item.stock ?: 0
+        binding.etCantidad.setText("1")
+        if (stockMax <= 0) {
+            binding.btnAgregarCarrito.isEnabled = false
+        }
+        val watcher = object: android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val v = s?.toString()?.toIntOrNull() ?: 1
+                val clamped = kotlin.math.max(1, kotlin.math.min(v, stockMax))
+                val t = binding.etCantidad.text?.toString()?.toIntOrNull() ?: 1
+                if (clamped != t) binding.etCantidad.setText(clamped.toString())
+            }
+        }
+        binding.etCantidad.addTextChangedListener(watcher)
 
         val urls: List<String> = buildList {
             if (!item.url_imagen_principal.isNullOrBlank()) add(normalizarUrl(item.url_imagen_principal))
@@ -181,6 +198,11 @@ class ProductDetailActivity : ComponentActivity() {
                 else -> detalle?.precio_detalle
             }
             if (precio == null) { Toast.makeText(this@ProductDetailActivity, "Precio no disponible", Toast.LENGTH_SHORT).show(); return@launch }
+            val cantidadIngresada = binding.etCantidad.text?.toString()?.toIntOrNull() ?: 1
+            val stock = detalle?.stock ?: 0
+            if (cantidadIngresada > stock) {
+                Toast.makeText(this@ProductDetailActivity, "Stock insuficiente: pedido ${cantidadIngresada}, stock ${stock}", Toast.LENGTH_SHORT).show(); return@launch
+            }
             var inventarioId = detalle?.inventario_id
             if (inventarioId == null) {
                 try {
@@ -194,7 +216,7 @@ class ProductDetailActivity : ComponentActivity() {
                 inventario_id = inventarioId!!,
                 producto_id = productId,
                 nombre_producto = binding.tvName.text?.toString(),
-                cantidad = 1,
+                cantidad = cantidadIngresada,
                 precio_unitario = precio,
                 costo_referencia = null,
                 stock_disponible = detalle?.stock

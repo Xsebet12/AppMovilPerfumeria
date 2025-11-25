@@ -33,7 +33,8 @@ class MainActivity : AppCompatActivity() {
         graph.setStartDestination(if (esEmpleado) R.id.homeAdminFragment else R.id.homeFragment)
         navController.graph = graph
 
-        // Conectar bottom navigation DESPUÉS de asignar el graph definitivo.
+        bottomNavigationView.menu.clear()
+        if (esEmpleado) bottomNavigationView.inflateMenu(R.menu.bottom_nav_menu_admin) else bottomNavigationView.inflateMenu(R.menu.bottom_nav_menu_client)
         NavigationUI.setupWithNavController(bottomNavigationView, navController)
 
         // Personalizar navegación para limpiar detalle intermedio (product detail fragment) al cambiar secciones
@@ -51,23 +52,8 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
-        // Ajustar ítems visibles según tipo de usuario
-        if (esEmpleado) {
-            bottomNavigationView.menu.findItem(R.id.homeFragment)?.isVisible = false
-            bottomNavigationView.menu.findItem(R.id.homeAdminFragment)?.isVisible = true
-            bottomNavigationView.menu.findItem(R.id.cartFragment)?.isVisible = false
-            bottomNavigationView.menu.findItem(R.id.manageOrdersFragment)?.isVisible = true
-            // Seleccionar explícitamente el item HomeAdmin para marcarlo
-            bottomNavigationView.selectedItemId = R.id.homeAdminFragment
-        } else {
-            bottomNavigationView.menu.findItem(R.id.homeAdminFragment)?.isVisible = false
-            bottomNavigationView.menu.findItem(R.id.homeFragment)?.isVisible = true
-            bottomNavigationView.selectedItemId = R.id.homeFragment
-        }
-
-        // Visibilidad de gestión de usuarios (todos los empleados pueden ver clientes)
-        bottomNavigationView.menu.findItem(R.id.manageUsersFragment)?.isVisible = esEmpleado
-        bottomNavigationView.menu.findItem(R.id.manageOrdersFragment)?.isVisible = esEmpleado
+        bottomNavigationView.selectedItemId = if (esEmpleado) R.id.homeAdminFragment else R.id.homeFragment
+        bottomNavigationView.menu.findItem(R.id.manageEmployeesFragment)?.isVisible = esOwner
     }
 
     override fun onResume() {
@@ -86,11 +72,9 @@ class MainActivity : AppCompatActivity() {
         graph.setStartDestination(if (esEmpleado) R.id.homeAdminFragment else R.id.homeFragment)
         navController.graph = graph
 
-        bottomNavigationView.menu.findItem(R.id.homeAdminFragment)?.isVisible = esEmpleado
-        bottomNavigationView.menu.findItem(R.id.homeFragment)?.isVisible = !esEmpleado
-        bottomNavigationView.menu.findItem(R.id.cartFragment)?.isVisible = !esEmpleado
-        bottomNavigationView.menu.findItem(R.id.manageUsersFragment)?.isVisible = esEmpleado
-        bottomNavigationView.menu.findItem(R.id.manageOrdersFragment)?.isVisible = esEmpleado
+        bottomNavigationView.menu.clear()
+        if (esEmpleado) bottomNavigationView.inflateMenu(R.menu.bottom_nav_menu_admin) else bottomNavigationView.inflateMenu(R.menu.bottom_nav_menu_client)
+        bottomNavigationView.menu.findItem(R.id.manageEmployeesFragment)?.isVisible = esOwner
         bottomNavigationView.selectedItemId = if (esEmpleado) R.id.homeAdminFragment else R.id.homeFragment
     }
 }
