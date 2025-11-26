@@ -7,7 +7,7 @@ Aplicación móvil Android desarrollada en Kotlin para una plataforma de e-comme
 ## 🛠️ Tecnologías Utilizadas
 
 - **Lenguaje:** Kotlin 100%
- - **Arquitectura:** Organización libre (Activities/Fragments, helpers, managers); sin MVVM estricto
+- **Arquitectura:** Organización libre (Activities/Fragments, helpers, managers).
 - **Backend:** Xano (Plataforma low-code)
 - **Networking:** Retrofit + OkHttp + Gson
 - **Navegación:** Navigation Component
@@ -220,7 +220,7 @@ jvmTarget = "21"
 - Retrofit2 + Gson Converter
 - OkHttp3 + Logging Interceptor
 - Coroutines (core + android)
-- Lifecycle (runtime + viewmodel)
+- Lifecycle (runtime)
 - Activity KTX
 - Coil (carga de imágenes)
 - ViewBinding
@@ -246,3 +246,9 @@ jvmTarget = "21"
    - Verificar permisos internet
 ### Regiones y Comunas (XANO_BASE_URL)
 - `GET /regComuna` - Listar regiones con comunas (misma base que API principal)
+
+## 🧭 Resumen de Arquitectura (actual)
+
+- Sin MVVM: lógica y estado en `Fragments/Activities`; sin `ViewModel/StateFlow`.
+- Acceso a datos mediante repositorios (`cliente/services`, `empleado/services`).
+- Pantallas ajustadas: `ManageUsersFragment`, `UserDetailFragment`, `ManageEmployeesFragment`, `EmpleadoDetailFragment`.
