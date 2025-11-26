@@ -75,7 +75,11 @@ class PurchaseHistoryActivity : ComponentActivity() {
     private fun flatten(src: List<HistorialPedido>): List<HistoryListItem> {
         val out = mutableListOf<HistoryListItem>()
         src.forEach { pedido ->
-            out.add(HistoryListItem.Header(pedido.pedido_info))
+            out.add(HistoryListItem.Header(
+                texto = pedido.pedido_info,
+                estadoPago = pedido.estado_pago,
+                estadoEnvio = pedido.estado_envio
+            ))
             pedido.detalles.forEach { d ->
                 out.add(HistoryListItem.Detail(d))
             }
@@ -85,7 +89,7 @@ class PurchaseHistoryActivity : ComponentActivity() {
 }
 
 private sealed class HistoryListItem {
-    data class Header(val texto: String): HistoryListItem()
+    data class Header(val texto: String, val estadoPago: String?, val estadoEnvio: String?): HistoryListItem()
     data class Detail(val d: HistorialDetalle): HistoryListItem()
 }
 
@@ -114,6 +118,11 @@ private class HistoryAdapter(private var items: List<HistoryListItem>) : Recycle
             is HistoryListItem.Header -> {
                 val b = ItemHistoryHeaderBinding.bind(holder.itemView)
                 b.tvHeader.text = it.texto
+                // Visual diferenciada para estado_pago y estado_envio
+                b.tvEstadoPago.text = formatearEstadoPago(it.estadoPago)
+                b.tvEstadoEnvio.text = formatearEstadoEnvio(it.estadoEnvio)
+                b.tvEstadoPago.background = android.graphics.drawable.ColorDrawable(colorEstadoPago(b.root.context, it.estadoPago))
+                b.tvEstadoEnvio.background = android.graphics.drawable.ColorDrawable(colorEstadoEnvio(b.root.context, it.estadoEnvio))
             }
             is HistoryListItem.Detail -> {
                 val b = ItemHistoryDetailBinding.bind(holder.itemView)
@@ -149,5 +158,37 @@ private class HistoryAdapter(private var items: List<HistoryListItem>) : Recycle
             nf.maximumFractionDigits = 0
             nf.format(valor)
         } catch (_: Exception) { "$${"%.0f".format(valor)}" }
+    }
+
+    private fun formatearEstadoPago(v: String?): String = when (v?.lowercase()) {
+        "pendiente" -> "Pago pendiente"
+        "aceptado" -> "Pago aceptado"
+        "rechazado" -> "Pago rechazado"
+        null, "" -> "Pago N/D"
+        else -> v
+    }
+
+    private fun formatearEstadoEnvio(v: String?): String = when (v?.lowercase()) {
+        "rechazado" -> "Envío rechazado"
+        "preparando" -> "Preparando"
+        "despachado" -> "Despachado"
+        "entregado" -> "Entregado"
+        null, "" -> "Envío N/D"
+        else -> v
+    }
+
+    private fun colorEstadoPago(ctx: android.content.Context, v: String?): Int = when (v?.lowercase()) {
+        "pendiente" -> androidx.core.content.ContextCompat.getColor(ctx, android.R.color.darker_gray)
+        "aceptado" -> androidx.core.content.ContextCompat.getColor(ctx, android.R.color.holo_green_light)
+        "rechazado" -> androidx.core.content.ContextCompat.getColor(ctx, android.R.color.holo_red_light)
+        else -> androidx.core.content.ContextCompat.getColor(ctx, android.R.color.darker_gray)
+    }
+
+    private fun colorEstadoEnvio(ctx: android.content.Context, v: String?): Int = when (v?.lowercase()) {
+        "rechazado" -> androidx.core.content.ContextCompat.getColor(ctx, android.R.color.holo_red_light)
+        "preparando" -> androidx.core.content.ContextCompat.getColor(ctx, android.R.color.holo_orange_light)
+        "despachado" -> androidx.core.content.ContextCompat.getColor(ctx, android.R.color.holo_blue_light)
+        "entregado" -> androidx.core.content.ContextCompat.getColor(ctx, android.R.color.holo_green_light)
+        else -> androidx.core.content.ContextCompat.getColor(ctx, android.R.color.darker_gray)
     }
 }

@@ -115,6 +115,9 @@ data class EstadoVentaRespuesta(
 
 data class HistorialPedido(
     val pedido_info: String,
+    val id_venta: Long,
+    val estado_pago: String?,
+    val estado_envio: String?,
     val detalles: List<HistorialDetalle>
 )
 
