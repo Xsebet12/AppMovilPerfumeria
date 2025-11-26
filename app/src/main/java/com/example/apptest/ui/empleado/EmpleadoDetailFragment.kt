@@ -8,9 +8,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import com.example.apptest.empleado.services.EmpleadoRepository
 import androidx.lifecycle.lifecycleScope
 import com.example.apptest.R
 import com.google.android.material.textfield.TextInputEditText
@@ -19,12 +17,10 @@ import kotlinx.coroutines.launch
 
 class EmpleadoDetailFragment: Fragment() {
     private val empleadoId: Int by lazy { arguments?.getInt("empleado_id") ?: -1 }
-    private val viewModel: EmpleadoDetailViewModel by viewModels { object: ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            @Suppress("UNCHECKED_CAST")
-            return EmpleadoDetailViewModel(requireContext().applicationContext, empleadoId) as T
-        }
-    } }
+    private lateinit var repo: EmpleadoRepository
+    private var empleado: com.example.apptest.empleado.models.XanoEmpleado? = null
+    private var cargando: Boolean = false
+    private var guardando: Boolean = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_empleado_detail, container, false)
@@ -39,27 +35,26 @@ class EmpleadoDetailFragment: Fragment() {
         val btnEliminar = view.findViewById<View>(R.id.btnEliminarDetalle)
         val progress = view.findViewById<View>(R.id.progressDetalle)
 
+        repo = EmpleadoRepository(requireContext().applicationContext)
         lifecycleScope.launch {
-            viewModel.state.collectLatest { st ->
-                progress.visibility = if (st.cargando || st.guardando) View.VISIBLE else View.GONE
-                val e = st.empleado
-                if (e != null) {
-                    val nombre = listOfNotNull(e.primer_nombre, e.segundo_nombre, e.apellido_paterno, e.apellido_materno).joinToString(" ").trim()
-                    tvNombre.text = if (nombre.isNotBlank()) nombre else "(Sin nombre)"
-                    tvEmail.text = e.email_contacto ?: "-"
-                    tvEstado.text = if (e.habilitado == true) "Habilitado" else "Bloqueado"
-                }
+            cargar()
+            progress.visibility = if (cargando || guardando) View.VISIBLE else View.GONE
+            val e = empleado
+            if (e != null) {
+                val nombre = listOfNotNull(e.primer_nombre, e.segundo_nombre, e.apellido_paterno, e.apellido_materno).joinToString(" ").trim()
+                tvNombre.text = if (nombre.isNotBlank()) nombre else "(Sin nombre)"
+                tvEmail.text = e.email_contacto ?: "-"
+                tvEstado.text = if (e.habilitado == true) "Habilitado" else "Bloqueado"
             }
         }
 
         btnEditar.setOnClickListener { mostrarDialogoEdicion() }
-        btnToggle.setOnClickListener { viewModel.toggleHabilitado() }
+        btnToggle.setOnClickListener { toggleHabilitado() }
         btnEliminar.setOnClickListener { confirmarEliminar() }
     }
 
     private fun mostrarDialogoEdicion() {
-        val st = viewModel.state.value
-        val e = st.empleado ?: return
+        val e = empleado ?: return
         val v = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_editar_empleado, null)
         val etPrimer = v.findViewById<TextInputEditText>(R.id.etPrimerNombre)
         val etSegundo = v.findViewById<TextInputEditText>(R.id.etSegundoNombre)
@@ -123,9 +118,7 @@ class EmpleadoDetailFragment: Fragment() {
                 val idx = spComuna.selectedItemPosition
                 datos["comuna_id"] = if (idx in listaComunas.indices) listaComunas[idx].first else null
                 datos["habilitado"] = swHabilitado.isChecked
-                viewLifecycleOwner.lifecycleScope.launch {
-                    viewModel.guardarCambios(datos) { ok -> if (!ok) Toast.makeText(requireContext(), "Error guardando", Toast.LENGTH_SHORT).show() }
-                }
+                viewLifecycleOwner.lifecycleScope.launch { guardarCambios(datos) { ok -> if (!ok) Toast.makeText(requireContext(), "Error guardando", Toast.LENGTH_SHORT).show() } }
             }
             .setNegativeButton("Cancelar", null)
             .create()
@@ -150,7 +143,7 @@ class EmpleadoDetailFragment: Fragment() {
             .setMessage("¿Seguro que deseas eliminar?")
             .setPositiveButton("Eliminar") { _, _ ->
                 viewLifecycleOwner.lifecycleScope.launch {
-                    viewModel.eliminar { ok ->
+                    eliminar { ok ->
                         if (ok) {
                             Toast.makeText(requireContext(), "Empleado eliminado", Toast.LENGTH_SHORT).show()
                             parentFragmentManager.setFragmentResult("empleado_eliminado", android.os.Bundle())
@@ -174,5 +167,29 @@ class EmpleadoDetailFragment: Fragment() {
             }
         }
         d.show()
+    }
+
+    private suspend fun cargar() {
+        cargando = true
+        repo.obtener(empleadoId).onSuccess { e -> empleado = e }.onFailure { }
+        cargando = false
+    }
+
+    private fun toggleHabilitado() {
+        val id = empleado?.id ?: return
+        viewLifecycleOwner.lifecycleScope.launch {
+            repo.actualizar(id, mapOf("habilitado" to (empleado?.habilitado != true))).onSuccess { e -> empleado = e }.onFailure { }
+        }
+    }
+
+    private suspend fun guardarCambios(datos: Map<String, Any?>, onFin: (Boolean)->Unit) {
+        val id = empleado?.id ?: return
+        guardando = true
+        repo.actualizar(id, datos).onSuccess { e -> empleado = e; guardando = false; onFin(true) }.onFailure { guardando = false; onFin(false) }
+    }
+
+    private suspend fun eliminar(onFin: (Boolean)->Unit) {
+        val id = empleado?.id ?: return
+        repo.eliminar(id).onSuccess { onFin(true) }.onFailure { onFin(false) }
     }
 }

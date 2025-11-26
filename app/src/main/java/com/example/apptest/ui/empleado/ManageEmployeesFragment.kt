@@ -6,9 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import com.example.apptest.empleado.services.EmpleadoRepository
+import com.example.apptest.empleado.models.XanoEmpleado
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.apptest.R
@@ -20,14 +19,11 @@ import androidx.core.widget.addTextChangedListener
 import androidx.navigation.fragment.findNavController
 
 class ManageEmployeesFragment: Fragment() {
-    private val viewModel: ManageEmployeesViewModel by viewModels { object: ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            @Suppress("UNCHECKED_CAST")
-            return ManageEmployeesViewModel(requireContext().applicationContext) as T
-        }
-    } }
-
     private lateinit var adapter: EmpleadosAdapter
+    private lateinit var repo: EmpleadoRepository
+    private var empleados: List<XanoEmpleado> = emptyList()
+    private var filtro: String = ""
+    private var cargando: Boolean = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_manage_employees, container, false)
@@ -48,14 +44,17 @@ class ManageEmployeesFragment: Fragment() {
         rv.layoutManager = LinearLayoutManager(requireContext())
         rv.adapter = adapter
 
-        etBuscar.addTextChangedListener { editable -> viewModel.setFiltro(editable?.toString().orEmpty()) }
+        repo = EmpleadoRepository(requireContext().applicationContext)
+        etBuscar.addTextChangedListener { editable ->
+            filtro = editable?.toString().orEmpty()
+            adapter.submit(empleadosFiltrados())
+        }
         if (esOwner) fab.setOnClickListener { mostrarDialogoCrearEmpleado() }
 
         lifecycleScope.launch {
-            viewModel.state.collectLatest { st ->
-                progress.visibility = if (st.cargando) View.VISIBLE else View.GONE
-                adapter.submit(viewModel.empleadosFiltrados())
-            }
+            cargarEmpleados()
+            progress.visibility = if (cargando) View.VISIBLE else View.GONE
+            adapter.submit(empleadosFiltrados())
         }
     }
 
@@ -145,8 +144,7 @@ class ManageEmployeesFragment: Fragment() {
                 if (!valido) { Toast.makeText(requireContext(), "Completa los campos requeridos", Toast.LENGTH_SHORT).show(); return@setPositiveButton }
                 viewLifecycleOwner.lifecycleScope.launch {
                     try {
-                        // Registro via /auth/register
-                        val ok = viewModel.crearEmpleadoViaRegister(datos)
+                        val ok = repo.registrarEmpleado(datos).onSuccess { e -> empleados = empleados + e }.isSuccess
                         if (!ok) Toast.makeText(requireContext(), "Error creando empleado", android.widget.Toast.LENGTH_SHORT).show()
                     } catch (_: Exception) { Toast.makeText(requireContext(), "Error creando", android.widget.Toast.LENGTH_SHORT).show() }
                 }
@@ -166,5 +164,21 @@ class ManageEmployeesFragment: Fragment() {
                     }
                 }
             }.show()
+    }
+
+    private suspend fun cargarEmpleados() {
+        cargando = true
+        repo.listar().onSuccess { lista -> empleados = lista }.onFailure { }
+        cargando = false
+    }
+
+    private fun empleadosFiltrados(): List<XanoEmpleado> {
+        if (filtro.isBlank()) return empleados
+        val f = filtro.lowercase()
+        return empleados.filter {
+            listOfNotNull(
+                it.primer_nombre, it.segundo_nombre, it.apellido_paterno, it.apellido_materno, it.email_contacto, it.username
+            ).any { v -> v?.lowercase()?.contains(f) == true }
+        }
     }
 }

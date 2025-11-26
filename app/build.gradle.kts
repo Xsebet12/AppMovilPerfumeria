@@ -17,8 +17,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Base URL de Xano (unificada)
         buildConfigField("String", "XANO_BASE_URL", "\"https://x8ki-letl-twmt.n7.xano.io/api:cGjNNLgz/\"")
-        // Base URL de Reg/Comuna (alias, mismo host)
-        buildConfigField("String", "XANO_REGCOMUNA_BASE_URL", "\"https://x8ki-letl-twmt.n7.xano.io/api:cGjNNLgz/\"")
         buildConfigField("String", "XANO_AUTH_BASE_URL", "\"https://x8ki-letl-twmt.n7.xano.io/api:NUzxXGzL/\"")
     }
 

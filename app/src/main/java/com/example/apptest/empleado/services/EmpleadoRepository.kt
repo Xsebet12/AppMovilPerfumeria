@@ -14,10 +14,6 @@ class EmpleadoRepository(private val context: Context) {
 
     suspend fun crear(datos: Map<String, Any?>): Result<XanoEmpleado> = runCatching { servicio.crear(datos) }
 
-    /**
-     * Crea empleado vía /auth/register con tipo_registro="empleado".
-     * Si la respuesta incluye id, retorna el empleado obtenido por GET empleado/{id}.
-     */
     suspend fun registrarEmpleado(datos: Map<String, Any?>): Result<XanoEmpleado> = runCatching {
         val payload = mutableMapOf<String, Any>("tipo_registro" to "empleado")
         for ((k, v) in datos) {

@@ -7,7 +7,7 @@ Aplicación móvil Android desarrollada en Kotlin para una plataforma de e-comme
 ## 🛠️ Tecnologías Utilizadas
 
 - **Lenguaje:** Kotlin 100%
-- **Arquitectura:** Patrón MVC tradicional con componentes modernos
+ - **Arquitectura:** Organización libre (Activities/Fragments, helpers, managers); sin MVVM estricto
 - **Backend:** Xano (Plataforma low-code)
 - **Networking:** Retrofit + OkHttp + Gson
 - **Navegación:** Navigation Component
@@ -20,14 +20,14 @@ Aplicación móvil Android desarrollada en Kotlin para una plataforma de e-comme
 ### Configuración Android
 
 1. **Requisitos Previos:**
-   - Android Studio Flamingo o superior
+   - Android Studio
    - JDK 21 instalado
    - Android SDK con API nivel 24+ 
    - Dispositivo físico o emulador Android
 
 2. **Clonar y Configurar Proyecto:**
    ```bash
-   git clone <url-del-repositorio>
+   git clone https://github.com/Xsebet12/AppMovilPerfumeria.git
    cd AppMovilPerfumeria
    ```
 
@@ -53,16 +53,14 @@ La aplicación utiliza Xano como backend. No se requiere configuración local de
 **URLs de Xano Configuradas:**
 - **API Principal:** `https://x8ki-letl-twmt.n7.xano.io/api:cGjNNLgz/`
 - **API Autenticación:** `https://x8ki-letl-twmt.n7.xano.io/api:NUzxXGzL/`
-- **API Regiones/Comunas:** `https://x8ki-letl-twmt.n7.xano.io/api:cGjNNLgz/`
 
 ## 🔧 Variables/URLs Necesarias
 
 ### URLs de API (Configuradas en build.gradle)
 
 ```kotlin
-buildConfigField("String", "XANO_BASE_URL", "https://x8ki-letl-twmt.n7.xano.io/api:cGjNNLgz/")
-buildConfigField("String", "XANO_REGCOMUNA_BASE_URL", "https://x8ki-letl-twmt.n7.xano.io/api:cGjNNLgz/")
-buildConfigField("String", "XANO_AUTH_BASE_URL", "https://x8ki-letl-twmt.n7.xano.io/api:NUzxXGzL/")
+buildConfigField("String", "XANO_BASE_URL", "\"https://x8ki-letl-twmt.n7.xano.io/api:cGjNNLgz/\"")
+buildConfigField("String", "XANO_AUTH_BASE_URL", "\"https://x8ki-letl-twmt.n7.xano.io/api:NUzxXGzL/\"")
 ```
 
 ### Variables de Entorno (Si se requieren cambios)
@@ -72,8 +70,8 @@ Para desarrollo local, modificar en `app/build.gradle.kts`:
 ```kotlin
 defaultConfig {
     // Cambiar URLs según entorno
-    buildConfigField("String", "XANO_BASE_URL", "<nueva_url>")
-    buildConfigField("String", "XANO_AUTH_BASE_URL", "<nueva_url_auth>")
+    buildConfigField("String", "XANO_BASE_URL", "\"<nueva_url>\"")
+    buildConfigField("String", "XANO_AUTH_BASE_URL", "\"<nueva_url_auth>\"")
 }
 ```
 
@@ -82,6 +80,11 @@ defaultConfig {
 ### Usuario Administrador
 - **Email:** admin@perfumeria.com
 - **Contraseña:** admin123
+- **Funcionalidades:** Gestión de productos, clientes, pedidos y imágenes
+
+### Usuario Owner
+- **Email:** owner@perfumeria.com
+- **Contraseña:** owner123
 - **Funcionalidades:** Gestión de productos, usuarios, pedidos y imágenes
 
 ### Usuario Cliente
@@ -101,7 +104,10 @@ defaultConfig {
 1. **Almacenamiento Backend:**
    - Las imágenes de productos se almacenan en Xano
    - URLs generadas automáticamente por la plataforma
-   - Formato: `https://x8ki-letl-twmt.n7.xano.io/api:cGjNNLgz/_file/<image_id>`
+   - Formato: `https://x8ki-letl-twmt.n7.xano.io/vault/`
+   - Subido a traves de api:
+      -`https://x8ki-letl-twmt.n7.xano.io/api:cGjNNLgz/producInv`
+      -`https://x8ki-letl-twmt.n7.xano.io/api:cGjNNLgz/producto_imagen`
 
 2. **Caché Local:**
    - La aplicación utiliza `CatalogCache` para cachear imágenes
@@ -110,14 +116,13 @@ defaultConfig {
 
 3. **Gestión de Imágenes:**
    - Administradores pueden subir/editar imágenes desde la app
-   - Client-side: Glide/Picasso para carga eficiente
    - Validación de formatos y tamaños
 
 ### Estructura de Imágenes en Xano
 
 - **Tabla:** `producto_imagen`
 - **Relación:** Many-to-One con productos
-- **Campos:** id, producto_id, imagen_url, orden, fecha_creacion
+- **Campos:** id, producto_id, imagen_url, imagen_principal, fecha_creacion
 
 ## 🚀 Funcionalidades Principales
 
@@ -135,7 +140,6 @@ defaultConfig {
 - ✅ Administración de imágenes de productos
 - ✅ Gestión de usuarios/clientes
 - ✅ Administración de pedidos
-- ✅ Dashboard con métricas
 - ✅ Actualización de estados de pedidos
 
 ## 📁 Estructura del Proyecto
@@ -174,23 +178,27 @@ app/
 - `POST /auth/signup` - Registro usuario
 - `GET /auth/me` - Perfil usuario actual
 
-### Productos (XANO_BASE_URL)  
-- `GET /producto` - Listar productos
-- `GET /producto/{id}` - Detalle producto
-- `POST /producto` - Crear producto (admin)
-- `PUT /producto/{id}` - Actualizar producto (admin)
-- `DELETE /producto/{id}` - Eliminar producto (admin)
+### Catálogo y Productos (XANO_BASE_URL)
+- `GET /producInv` - Listar productos
+- `GET /producInv/{id}` - Detalle producto
+- `POST /producInv` - Crear producto con imágenes (admin)
+- `PATCH /producInv/{producto_id}` - Editar producto parcial (admin)
+- `POST /producInv/update` - Actualizar habilitado/disponible/stock (admin)
+- `GET /ProducInvAdmin` - Catálogo completo (admin)
+- `GET /ProducInvAdmin/{id}` - Detalle admin
 
-### Pedidos (XANO_BASE_URL)
+### Pedidos y Seguimiento (XANO_BASE_URL)
 - `POST /venta` - Crear pedido
 - `GET /venta` - Listar pedidos usuario
 - `GET /venta/{id}` - Detalle pedido
-- `PUT /venta/{id}` - Actualizar estado (admin)
+- `GET /seguimiento_pedido/venta/{venta_id}` - Obtener seguimiento por venta
+- `PATCH /update_seguimiento_pedido` - Actualizar seguimiento
 
 ### Imágenes (XANO_BASE_URL)
-- `GET /producto_imagen` - Listar imágenes producto
 - `POST /producto_imagen` - Subir imagen (admin)
-- `DELETE /producto_imagen/{id}` - Eliminar imagen (admin)
+- `DELETE /producto_imagen/{imagen_id}` - Eliminar imagen (admin)
+- `PATCH /producto_imagen/{imagen_id}` - Marcar como principal
+- `POST /producto_imagen/set_principal` - Establecer principal
 
 ## ⚙️ Configuración de Build
 
@@ -205,16 +213,19 @@ jvmTarget = "21"
 ```
 
 ### Dependencias Principales
-- AndroidX Core, AppCompat, ConstraintLayout
+- AndroidX Core, AppCompat
+- Material Components
 - Navigation Component
+- RecyclerView, ViewPager2, CardView
 - Retrofit2 + Gson Converter
 - OkHttp3 + Logging Interceptor
-- Corrutinas Android
+- Coroutines (core + android)
+- Lifecycle (runtime + viewmodel)
+- Activity KTX
+- Coil (carga de imágenes)
 - ViewBinding
 
-## 🐛 Troubleshooting
-
-### Problemas Comunes
+## 🐛 Problemas Comunes
 
 1. **Error SDK no encontrado:**
    ```bash
@@ -233,29 +244,5 @@ jvmTarget = "21"
 
 4. **Imágenes no cargan:**
    - Verificar permisos internet
-   - Revisar configuración CacheManager
-
-### Logs y Debug
-
-- HTTP Logging Interceptor activado en debug
-- Logs detallados de requests/responses
-- SessionManager logs para seguimiento autenticación
-
-## 📞 Soporte
-
-Para issues técnicos o preguntas sobre:
-- Configuración del proyecto
-- Integración con Xano  
-- Problemas de build/ejecución
-- Funcionalidades específicas
-
-Contactar al equipo de desarrollo con:
-- Capturas de pantalla del error
-- Logs de Android Studio
-- Pasos para reproducir el issue
-
----
-
-**Última Actualización:** 2024-12-01  
-**Versión:** 1.0  
-**Estado:** Production Ready
+### Regiones y Comunas (XANO_BASE_URL)
+- `GET /regComuna` - Listar regiones con comunas (misma base que API principal)

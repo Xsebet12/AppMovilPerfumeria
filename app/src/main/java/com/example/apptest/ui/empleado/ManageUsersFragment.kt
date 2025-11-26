@@ -8,9 +8,10 @@ import android.widget.EditText
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import com.example.apptest.cliente.services.ClienteRepository
+import com.example.apptest.pais.services.XanoRegComunaService
+import com.example.apptest.cliente.models.XanoCliente
+import com.example.apptest.core.network.ApiClient
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.apptest.R
@@ -25,14 +26,14 @@ import androidx.navigation.fragment.findNavController
 import com.example.apptest.core.storage.SessionManager
 
 class ManageUsersFragment: Fragment() {
-    private val viewModel: ManageUsersViewModel by viewModels { object: ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            @Suppress("UNCHECKED_CAST")
-            return ManageUsersViewModel(requireContext().applicationContext) as T
-        }
-    } }
-
     private lateinit var adapter: ClientesAdapter
+    private lateinit var repo: ClienteRepository
+    private lateinit var regSrv: XanoRegComunaService
+    private var clientes: List<XanoCliente> = emptyList()
+    private var filtro: String = ""
+    private var cargando: Boolean = false
+    private var regiones: List<Pair<Int, String>> = emptyList()
+    private var comunasDetalladas: List<Triple<Int, Int?, String>> = emptyList()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_manage_users, container, false)
@@ -59,7 +60,13 @@ class ManageUsersFragment: Fragment() {
         rv.layoutManager = LinearLayoutManager(requireContext())
         rv.adapter = adapter
 
-        etBuscar.addTextChangedListener { editable -> viewModel.setFiltro(editable?.toString().orEmpty()) }
+        repo = ClienteRepository(requireContext().applicationContext)
+        regSrv = ApiClient.getRetrofit(requireContext()).create(XanoRegComunaService::class.java)
+
+        etBuscar.addTextChangedListener { editable ->
+            filtro = editable?.toString().orEmpty()
+            adapter.submit(clientesFiltrados())
+        }
         
         // Solo permitir crear si es owner
         if (esOwner) {
@@ -67,14 +74,14 @@ class ManageUsersFragment: Fragment() {
         }
 
         lifecycleScope.launch {
-            viewModel.state.collectLatest { st ->
-                progress.visibility = if (st.cargando) View.VISIBLE else View.GONE
-                adapter.submit(viewModel.clientesFiltrados())
-            }
+            cargarRegionesYComunas()
+            cargarClientes()
+            progress.visibility = if (cargando) View.VISIBLE else View.GONE
+            adapter.submit(clientesFiltrados())
         }
 
         parentFragmentManager.setFragmentResultListener("cliente_eliminado", viewLifecycleOwner) { _, _ ->
-            viewModel.cargarClientes()
+            lifecycleScope.launch { cargarClientes() }
         }
     }
 
@@ -84,7 +91,7 @@ class ManageUsersFragment: Fragment() {
     }
 
     private fun mostrarDialogoCrear() {
-        viewModel.cargarRegionesYComunas()
+        lifecycleScope.launch { cargarRegionesYComunas() }
         val v = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_crear_cliente, null)
         val etPrimer = v.findViewById<TextInputEditText>(R.id.etPrimerNombre)
         val etSegundo = v.findViewById<TextInputEditText>(R.id.etSegundoNombre)
@@ -107,25 +114,18 @@ class ManageUsersFragment: Fragment() {
         var comunasFiltradasPairs: List<Pair<Int, String>> = emptyList()
 
         lifecycleScope.launch {
-            viewModel.state.collect { st ->
-                // Regiones nombres
-                val regionesNombres = st.regiones.map { it.second }
-                if (spRegion.adapter == null || spRegion.adapter.count != regionesNombres.size) {
-                    spRegion.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, regionesNombres)
-                }
-                // Región seleccionada actual
-                val regionIdSel = spRegion.selectedItemPosition.takeIf { it in st.regiones.indices }?.let { st.regiones[it].first }
-                comunasFiltradasPairs = st.comunasDetalladas.filter { it.second != null && it.second == regionIdSel }.map { it.first to it.third }
-                val comunasNombres = comunasFiltradasPairs.map { it.second }
-                spComuna.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, comunasNombres)
-            }
+            val regionesNombres = regiones.map { it.second }
+            spRegion.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, regionesNombres)
+            val regionIdSel = spRegion.selectedItemPosition.takeIf { it in regiones.indices }?.let { regiones[it].first }
+            comunasFiltradasPairs = comunasDetalladas.filter { it.second != null && it.second == regionIdSel }.map { it.first to it.third }
+            val comunasNombres = comunasFiltradasPairs.map { it.second }
+            spComuna.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, comunasNombres)
         }
 
         spRegion.setOnItemSelectedListener(object: android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>, view: View?, position: Int, id: Long) {
-                val st = viewModel.state.value
-                val regionIdSel = st.regiones.getOrNull(position)?.first
-                comunasFiltradasPairs = st.comunasDetalladas.filter { it.second != null && it.second == regionIdSel }.map { it.first to it.third }
+                val regionIdSel = regiones.getOrNull(position)?.first
+                comunasFiltradasPairs = comunasDetalladas.filter { it.second != null && it.second == regionIdSel }.map { it.first to it.third }
                 val nombres = comunasFiltradasPairs.map { it.second }
                 spComuna.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, nombres)
             }
@@ -147,8 +147,7 @@ class ManageUsersFragment: Fragment() {
                 datos["nombre_calle"] = etCalle.text?.toString()?.takeIf { it.isNotBlank() }
                 datos["numero_calle"] = etNumero.text?.toString()?.takeIf { it.isNotBlank() }
                 val regionIdx = spRegion.selectedItemPosition
-                val st = viewModel.state.value
-                if (regionIdx >= 0 && regionIdx < st.regiones.size) datos["region_id"] = st.regiones[regionIdx].first
+                if (regionIdx >= 0 && regionIdx < regiones.size) datos["region_id"] = regiones[regionIdx].first
                 val comunaIdx = spComuna.selectedItemPosition
                 if (comunaIdx >= 0 && comunaIdx < comunasFiltradasPairs.size) datos["comuna_id"] = comunasFiltradasPairs[comunaIdx].first
                 val tipoIdx = spTipoCliente.selectedItemPosition
@@ -156,7 +155,10 @@ class ManageUsersFragment: Fragment() {
                 datos["habilitado"] = swHabilitado.isChecked
                 viewLifecycleOwner.lifecycleScope.launch {
                     kotlinx.coroutines.delay(5000)
-                    viewModel.crearCliente(datos) { ok -> if (!ok) Toast.makeText(requireContext(), "Error creando", Toast.LENGTH_SHORT).show() }
+                    repo.crear(datos).onSuccess { c ->
+                        clientes = clientes + c
+                        adapter.submit(clientesFiltrados())
+                    }.onFailure { Toast.makeText(requireContext(), "Error creando", Toast.LENGTH_SHORT).show() }
                 }
             }
             .setNegativeButton("Cancelar", null)
@@ -168,4 +170,35 @@ class ManageUsersFragment: Fragment() {
         }
         dialog.show()
     }
+
+    private suspend fun cargarClientes() {
+        cargando = true
+        repo.listar().onSuccess { lista ->
+            clientes = lista
+        }.onFailure { }
+        cargando = false
+    }
+
+    private fun clientesFiltrados(): List<XanoCliente> {
+        if (filtro.isBlank()) return clientes
+        val f = filtro.lowercase()
+        return clientes.filter {
+            listOfNotNull(
+                it.primer_nombre, it.segundo_nombre, it.apellido_paterno, it.apellido_materno, it.email_contacto
+            ).any { v -> v?.lowercase()?.contains(f) == true }
+        }
+    }
+
+    private suspend fun cargarRegionesYComunas() {
+        try {
+            kotlinx.coroutines.delay(4000)
+            val regionesCompletas = regSrv.obtenerRegionesConComunas()
+            regiones = regionesCompletas.mapNotNull { it.regionPair() }
+            comunasDetalladas = regionesCompletas.flatMap { reg ->
+                reg.comunas.orEmpty().mapNotNull { c -> Triple(c.id, c.regionId, c.nombreComuna ?: c.id.toString()) }
+            }
+        } catch (_: Exception) { }
+    }
 }
+
+private fun com.example.apptest.pais.models.XanoRegionComuna.regionPair(): Pair<Int, String>? = id.let { rid -> rid to (nombreRegion ?: rid.toString()) }
